@@ -2,8 +2,7 @@
 
 > Conversational chatbot built with NLP techniques for interactive dialogue.
 
-Explores chatbot architectures — intent classification, dialogue management, and response generation. Coursework project from GWU.
-
+Explores chatbot architectures — intent classification, dialogue management, and response generation.
 ## What it does
 
 - Classifies user intent from input text
