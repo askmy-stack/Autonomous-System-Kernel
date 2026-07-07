@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "jarvis-chatbot"
 version = "0.1.0"
@@ -35,6 +39,10 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*"]
 
 [tool.ruff]
 line-length = 100
