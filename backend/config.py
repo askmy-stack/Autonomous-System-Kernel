@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # Required
-    openai_api_key: str
+    openai_api_key: str = ""
 
     # Model
     model_name: str = "gpt-4o-mini"
@@ -31,4 +31,4 @@ class Settings(BaseSettings):
 
 
 # Pydantic Settings loads OPENAI_API_KEY from the environment at runtime.
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings()

@@ -23,6 +23,8 @@ def client():
         yield "Jarvis!"
 
     with patch("backend.main.astream_response", new=_fake_stream):
+        # Pre-import so the patch is in place when TestClient starts
+        import backend.agent  # noqa: F401
         with TestClient(app) as c:
             yield c
 

@@ -49,10 +49,13 @@ metrics: dict[str, int] = {"chat_requests": 0, "voice_requests": 0}
 
 
 async def astream_response(user_input: str, session_id: str, chat_history: list):
-    """Thin indirection for easier test patching."""
-    from backend.agent import astream_response as agent_stream
+    """
+    Lazy proxy so tests can patch `backend.main.astream_response` without importing
+    the full agent stack at module import time.
+    """
+    from backend.agent import astream_response as _astream_response
 
-    async for token in agent_stream(user_input, session_id, chat_history):
+    async for token in _astream_response(user_input, session_id, chat_history):
         yield token
 
 
