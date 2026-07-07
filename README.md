@@ -3,10 +3,6 @@
 A production-grade personal AI assistant built with **LangChain v0.3**, **FastAPI**, and **Streamlit**.  
 Streams responses token-by-token, remembers conversations across sessions, controls smart home devices, and searches the web in real time.
 
-![A.S.K. Demo](assets/ask-demo.svg)
-
-> **Demo media:** `assets/ask-demo.svg` is a polished placeholder. Record a walkthrough and save it as `assets/jarvis-demo.gif`, then update this line to use the GIF. See [docs/local-privacy-runbook.md](docs/local-privacy-runbook.md).
-
 ---
 
 ## Features
