@@ -13,11 +13,12 @@ For horizontal scaling, swap `session_histories` for a Redis-backed store.
 from __future__ import annotations
 
 import os
+
 import structlog
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 from langchain_core.messages import AIMessage, HumanMessage
+from pydantic import BaseModel
 
 from backend.config import settings
 from backend.memory_graph import MemoryGraph

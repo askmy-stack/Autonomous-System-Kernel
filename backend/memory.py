@@ -37,14 +37,14 @@ def _get_vectorstore() -> Chroma:
 def save_to_memory(session_id: str, human: str, assistant: str) -> None:
     """Embed and persist a conversation turn."""
     vs = _get_vectorstore()
- clean_human = redact_text(human)
- clean_assistant = redact_text(assistant)
+    clean_human = redact_text(human)
+    clean_assistant = redact_text(assistant)
     vs.add_texts(
- texts=[f"User: {clean_human}\nJarvis: {clean_assistant}"],
+        texts=[f"User: {clean_human}\nJarvis: {clean_assistant}"],
         metadatas=[{"session_id": session_id}],
     )
- if "i will " in human.lower():
-  _graph.add_fact(Fact(key="commitment.user", value=clean_human, source=session_id))
+    if "i will " in human.lower():
+        _graph.add_fact(Fact(key="commitment.user", value=clean_human, source=session_id))
     log.info("memory_saved", session_id=session_id)
 
 

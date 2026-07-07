@@ -1,4 +1,4 @@
-from typing import Optional
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,12 +14,12 @@ class Settings(BaseSettings):
 
     # LangSmith observability (optional)
     langchain_tracing_v2: bool = False
-    langchain_api_key: Optional[str] = None
+    langchain_api_key: str | None = None
     langchain_project: str = "jarvis-chatbot"
 
     # Home Assistant smart home (optional)
-    home_assistant_url: Optional[str] = None
-    home_assistant_token: Optional[str] = None
+    home_assistant_url: str | None = None
+    home_assistant_token: str | None = None
 
     # Backend URL (consumed by Streamlit)
     backend_url: str = "http://localhost:8000"

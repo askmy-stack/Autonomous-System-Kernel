@@ -1,7 +1,7 @@
 """Tool: current weather via Open-Meteo (free, no API key required)."""
 
-import structlog
 import requests
+import structlog
 from langchain_core.tools import tool
 
 log = structlog.get_logger()
