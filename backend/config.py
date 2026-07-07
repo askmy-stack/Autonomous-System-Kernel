@@ -30,5 +30,5 @@ class Settings(BaseSettings):
     backup_dir: str = "./backups"
 
 
-# Single shared instance — raises ValidationError at startup if OPENAI_API_KEY is missing
-settings = Settings()
+# Pydantic Settings loads OPENAI_API_KEY from the environment at runtime.
+settings = Settings()  # type: ignore[call-arg]

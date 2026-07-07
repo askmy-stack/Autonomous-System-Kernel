@@ -32,7 +32,11 @@ def get_weather(city: str) -> str:
 
     # Step 1: geocode the city name
     try:
-        geo = requests.get(GEOCODE_URL, params={"name": city, "count": 1}, timeout=5).json()
+        geo = requests.get(
+            GEOCODE_URL,
+            params={"name": city, "count": "1"},
+            timeout=5,
+        ).json()
     except Exception as exc:
         return f"Geocoding failed: {exc}"
 
@@ -48,8 +52,8 @@ def get_weather(city: str) -> str:
         weather = requests.get(
             WEATHER_URL,
             params={
-                "latitude": lat,
-                "longitude": lon,
+                "latitude": str(lat),
+                "longitude": str(lon),
                 "current": "temperature_2m,wind_speed_10m,weather_code",
                 "temperature_unit": "celsius",
                 "wind_speed_unit": "kmh",
