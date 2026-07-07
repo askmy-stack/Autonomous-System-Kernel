@@ -57,6 +57,7 @@ with st.sidebar:
     st.markdown("**Example prompts**")
     examples = [
         "What's my CPU usage right now?",
+        "What is my calendar today?",
         "What's the weather in Tokyo?",
         "Search for the latest news on AI agents",
         "Turn off the bedroom lights",
@@ -76,6 +77,14 @@ with st.sidebar:
         st.session_state.session_id = str(uuid.uuid4())
         st.rerun()
 
+    if st.button("🗓️ Morning brief", use_container_width=True):
+        try:
+            brief_resp = requests.get(f"{BACKEND_URL}/brief/morning", timeout=5).json()
+            st.session_state.messages.append({"role": "assistant", "content": brief_resp.get("brief", "No brief available.")})
+            st.rerun()
+        except Exception:
+            st.warning("Could not fetch morning brief.")
+
     # Backend health indicator
     st.divider()
     try:
@@ -88,6 +97,17 @@ with st.sidebar:
 # ── Main chat area ─────────────────────────────────────────────────────────────
 st.title("🤖 Jarvis — Personal AI Assistant")
 st.caption("Your personal assistant with real-time tools and persistent memory.")
+
+voice_transcript = st.text_input("Voice transcript (fallback input)", value="", key="voice_transcript")
+if st.button("🎤 Send voice transcript", use_container_width=False) and voice_transcript.strip():
+    try:
+        payload = {"transcript": voice_transcript, "session_id": st.session_state.session_id}
+        vr = requests.post(f"{BACKEND_URL}/voice/chat", json=payload, timeout=60).json()
+        st.session_state.messages.append({"role": "user", "content": f"[voice] {vr.get('transcript', voice_transcript)}"})
+        st.session_state.messages.append({"role": "assistant", "content": vr.get("response", "")})
+        st.rerun()
+    except Exception as exc:
+        st.error(f"Voice request failed: {exc}")
 
 # Render existing conversation
 for msg in st.session_state.messages:

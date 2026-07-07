@@ -3,6 +3,10 @@
 A production-grade personal AI assistant built with **LangChain v0.3**, **FastAPI**, and **Streamlit**.  
 Streams responses token-by-token, remembers conversations across sessions, controls smart home devices, and searches the web in real time.
 
+![Jarvis Demo](assets/jarvis-demo.gif)
+
+> Replace `assets/jarvis-demo.gif` with your recorded product walkthrough for a richer preview.
+
 ---
 
 ## Features
@@ -10,12 +14,15 @@ Streams responses token-by-token, remembers conversations across sessions, contr
 | Feature | Details |
 |---|---|
 | **Autonomous System Kernel Agent** | Tool-calling agent powered by `gpt-4o-mini` |
+| **Calendar Assistant** | Apple Calendar support for today schedule / next event / free slots |
 | **Web Search** | DuckDuckGo — no API key needed |
 | **Live Weather** | Open-Meteo free API — any city worldwide |
 | **System Monitor** | Real-time CPU, memory, disk via psutil |
+| **Voice Path** | Voice transcript to response + local TTS endpoint |
 | **Smart Home** | Home Assistant REST API (optional) |
 | **Streaming** | Token-by-token output via FastAPI + SSE |
 | **Vector Memory** | Persistent ChromaDB — memory survives restarts |
+| **Memory Graph** | Structured commitments/facts for daily workflow recall |
 | **Observability** | LangSmith tracing + structured JSON logging |
 | **Containerised** | One-command deploy with Docker Compose |
 
@@ -80,6 +87,12 @@ streamlit run app.py
 ```
 
 Open **http://localhost:8501**
+
+Try these prompts:
+- `What is my calendar today?`
+- `What is my next event?`
+- `Give me my morning brief`
+- `What did I commit to this week?`
 
 ### Option B — Docker (one command)
 
@@ -154,6 +167,11 @@ mypy backend/
 |---|---|---|
 | `GET` | `/health` | Liveness check |
 | `POST` | `/chat/stream` | Stream agent response |
+| `POST` | `/voice/chat` | Voice transcript in, response + audio out |
+| `POST` | `/voice/tts` | Text to local synthesized speech payload |
+| `GET` | `/brief/morning` | Daily brief from calendar + memory graph |
+| `GET` | `/metrics` | Basic request counters |
+| `POST` | `/ops/backup` | Backup local memory stores |
 | `GET` | `/chat/{id}/history` | Inspect session history |
 | `DELETE` | `/chat/{id}` | Clear session |
 
@@ -174,3 +192,15 @@ Interactive docs at **http://localhost:8000/docs**
 - **psutil** — system resource monitoring
 - **duckduckgo-search** — free web search
 - **Docker + Compose** — containerised deployment
+
+---
+
+## Roadmap Snapshot
+
+- [x] FastAPI backend + Streamlit frontend split
+- [x] Tool-calling agent with streaming
+- [x] Apple Calendar read workflows
+- [x] Voice request/response pathway
+- [x] Memory graph + morning brief
+- [ ] Native push-to-talk streaming STT
+- [ ] Calendar write operations with approval guardrails

@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     # Backend URL (consumed by Streamlit)
     backend_url: str = "http://localhost:8000"
 
+    # Privacy and operations
+    privacy_mode: str = "local_only"  # local_only | hybrid
+    redact_pii: bool = True
+    backup_dir: str = "./backups"
 
-# Single shared instance — raises ValidationError at startup if OPENAI_API_KEY is missing
+
+# Pydantic Settings loads OPENAI_API_KEY from the environment at runtime.
 settings = Settings()

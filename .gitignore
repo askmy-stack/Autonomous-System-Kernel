@@ -29,6 +29,8 @@ coverage.xml
 
 # Vector DB (persisted locally, not committed)
 chroma_db/
+memory_graph.db
+backups/
 
 # Jupyter
 .ipynb_checkpoints/

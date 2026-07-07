@@ -21,6 +21,10 @@ from langchain_core.messages import AIMessage, HumanMessage
 from pydantic import BaseModel
 
 from backend.config import settings
+from backend.memory_graph import MemoryGraph
+from backend.ops import backup_file
+from backend.voice.service import VoiceService
+from backend.workflows.daily_brief import build_morning_brief
 
 # Enable LangSmith tracing if configured
 if settings.langchain_tracing_v2 and settings.langchain_api_key:
@@ -39,16 +43,19 @@ app = FastAPI(
 # In-memory session store: {session_id: [BaseMessage, ...]}
 # Each entry is a LangChain message list used as chat_history for the agent.
 session_histories: dict[str, list] = {}
+voice_service = VoiceService()
+memory_graph = MemoryGraph()
+metrics: dict[str, int] = {"chat_requests": 0, "voice_requests": 0}
 
 
-async def astream_response(user_input: str, session_id: str, history: list):
+async def astream_response(user_input: str, session_id: str, chat_history: list):
     """
     Lazy proxy so tests can patch `backend.main.astream_response` without importing
     the full agent stack at module import time.
     """
     from backend.agent import astream_response as _astream_response
 
-    async for token in _astream_response(user_input, session_id, history):
+    async for token in _astream_response(user_input, session_id, chat_history):
         yield token
 
 
@@ -57,6 +64,15 @@ async def astream_response(user_input: str, session_id: str, history: list):
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
+
+
+class VoiceChatRequest(BaseModel):
+    transcript: str
+    session_id: str = "default"
+
+
+class TtsRequest(BaseModel):
+    text: str
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -80,6 +96,7 @@ async def chat_stream(req: ChatRequest):
     """
     if not req.message.strip():
         raise HTTPException(status_code=400, detail="message must not be empty")
+    metrics["chat_requests"] += 1
 
     history = session_histories.get(req.session_id, [])
 
@@ -104,6 +121,31 @@ async def chat_stream(req: ChatRequest):
     return StreamingResponse(generate(), media_type="text/plain")
 
 
+@app.post("/voice/chat")
+async def voice_chat(req: VoiceChatRequest):
+    """Accept transcript text, run assistant response, and return TTS audio payload."""
+    metrics["voice_requests"] += 1
+    transcript = voice_service.transcribe_text(req.transcript)
+    if not transcript:
+        raise HTTPException(status_code=400, detail="transcript must not be empty")
+    history = session_histories.get(req.session_id, [])
+    full_response = ""
+    async for token in astream_response(transcript, req.session_id, history):
+        full_response += token
+    session_histories[req.session_id] = history + [
+        HumanMessage(content=transcript),
+        AIMessage(content=full_response),
+    ]
+    audio_b64 = voice_service.synthesize(full_response)
+    return {"transcript": transcript, "response": full_response, "audio_base64": audio_b64}
+
+
+@app.post("/voice/tts")
+def voice_tts(req: TtsRequest):
+    """Synthesize speech from text."""
+    return {"audio_base64": voice_service.synthesize(req.text)}
+
+
 @app.delete("/chat/{session_id}")
 def clear_session(session_id: str):
     """Clear in-memory chat history for a session."""
@@ -123,4 +165,25 @@ def get_history(session_id: str):
             {"role": "human" if isinstance(m, HumanMessage) else "ai", "content": m.content}
             for m in history
         ],
+    }
+
+
+@app.get("/brief/morning")
+def morning_brief():
+    return {"brief": build_morning_brief(memory_graph)}
+
+
+@app.get("/metrics")
+def get_metrics():
+    return metrics
+
+
+@app.post("/ops/backup")
+def create_backup():
+    chroma_backup = backup_file("./chroma_db/chroma.sqlite3")
+    graph_backup = backup_file("./memory_graph.db")
+    return {
+        "privacy_mode": settings.privacy_mode,
+        "chroma_backup": chroma_backup,
+        "graph_backup": graph_backup,
     }

@@ -12,9 +12,13 @@ import structlog
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 
+from backend.memory_graph import Fact, MemoryGraph
+from backend.ops import redact_text
+
 log = structlog.get_logger()
 
 _vectorstore: Chroma | None = None
+_graph = MemoryGraph()
 
 
 def _get_vectorstore() -> Chroma:
@@ -33,10 +37,14 @@ def _get_vectorstore() -> Chroma:
 def save_to_memory(session_id: str, human: str, assistant: str) -> None:
     """Embed and persist a conversation turn."""
     vs = _get_vectorstore()
+    clean_human = redact_text(human)
+    clean_assistant = redact_text(assistant)
     vs.add_texts(
-        texts=[f"User: {human}\nJarvis: {assistant}"],
+        texts=[f"User: {clean_human}\nJarvis: {clean_assistant}"],
         metadatas=[{"session_id": session_id}],
     )
+    if "i will " in human.lower():
+        _graph.add_fact(Fact(key="commitment.user", value=clean_human, source=session_id))
     log.info("memory_saved", session_id=session_id)
 
 
