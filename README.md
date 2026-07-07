@@ -3,10 +3,6 @@
 A production-grade personal AI assistant built with **LangChain v0.3**, **FastAPI**, and **Streamlit**.  
 Streams responses token-by-token, remembers conversations across sessions, controls smart home devices, and searches the web in real time.
 
-![A.S.K. Demo](assets/jarvis-demo.gif)
-
-> Replace `assets/jarvis-demo.gif` with your recorded product walkthrough for a richer preview.
-
 ---
 
 ## Features
@@ -207,8 +203,6 @@ mypy backend/ --ignore-missing-imports
 | `POST` | `/ops/backup` | Backup local memory stores |
 | `GET` | `/chat/{id}/history` | Inspect session history |
 | `DELETE` | `/chat/{id}` | Clear session |
-
-Interactive docs at **http://localhost:8000/docs**
 
 ---
 
