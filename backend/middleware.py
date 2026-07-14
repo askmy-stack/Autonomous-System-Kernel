@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 
-from fastapi import HTTPException, Request, Response, status
+from fastapi import HTTPException, Request, Response, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -55,6 +55,26 @@ def require_ops_auth(request: Request) -> None:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key",
         )
+
+def authorize_websocket(websocket: WebSocket) -> bool:
+    """Validate ASK_API_KEY for a WebSocket connection.
+
+    ApiKeyMiddleware only wraps HTTP request/response cycles (BaseHTTPMiddleware
+    doesn't see WebSocket handshakes), so WS routes bypass it entirely. This
+    mirrors ApiKeyMiddleware's optional-auth behavior instead: open when
+    ASK_API_KEY is unset, required otherwise.
+
+    Browsers can't set custom headers on a WebSocket handshake, so a `?token=`
+    query param is accepted in addition to `Authorization: Bearer`.
+    """
+    if not settings.ask_api_key:
+        return True
+
+    auth = websocket.headers.get("authorization", "")
+    if auth == f"Bearer {settings.ask_api_key}":
+        return True
+
+    return websocket.query_params.get("token") == settings.ask_api_key
 
 
 class ClientHeaderMiddleware(BaseHTTPMiddleware):

@@ -28,6 +28,7 @@ from backend.memory_graph import Entity, EntityType, Fact, MemoryGraph
 from backend.middleware import (
     ApiKeyMiddleware,
     ClientHeaderMiddleware,
+    authorize_websocket,
     configure_cors,
     require_ops_auth,
 )
@@ -166,7 +167,15 @@ def voice_stt_transcribe(req: SttTranscribeRequest):
 
 @app.websocket("/voice/stt/stream")
 async def voice_stt_stream(websocket: WebSocket):
-    """Chunked audio STT over WebSocket. Send JSON {audio_base64, mime_type, final: bool}."""
+    """Chunked audio STT over WebSocket. Send JSON {audio_base64, mime_type, final: bool}.
+
+    Requires ASK_API_KEY (via `Authorization: Bearer` or `?token=`) whenever
+    ASK_API_KEY is configured — see authorize_websocket() for why this can't
+    just rely on ApiKeyMiddleware.
+    """
+    if not authorize_websocket(websocket):
+        await websocket.close(code=4401, reason="Invalid or missing API key")
+        return
     await websocket.accept()
     try:
         while True:

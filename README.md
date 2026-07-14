@@ -238,7 +238,7 @@ mypy backend/ --ignore-missing-imports
 | `POST` | `/voice/tts` | Text to local synthesized speech payload |
 | `POST` | `/voice/stt/transcribe` | Chunked/base64 audio STT with browser fallback |
 | `GET` | `/voice/stt/status` | Available STT backends |
-| `WS` | `/voice/stt/stream` | WebSocket chunked STT |
+| `WS` | `/voice/stt/stream` | WebSocket chunked STT 🔒 |
 | `POST` | `/calendar/approve` | Issue approval token for calendar writes |
 | `GET` | `/health/providers` | Ollama/OpenAI/OpenRouter health probes |
 | `GET` | `/brief/morning` | Daily brief from calendar + memory graph |
@@ -258,6 +258,11 @@ configured, these endpoints respond `503` instead of allowing open access.
 `/ops/restore` also only accepts `target_path` values from a fixed allowlist
 (the files `/ops/backup` manages) and `backup_path` values inside
 `BACKUP_DIR`, so it can't be used to read or overwrite arbitrary files.
+
+🔒 Requires `ASK_API_KEY` when configured. `/voice/stt/stream` bypasses
+`ApiKeyMiddleware` (it doesn't wrap WebSocket handshakes), so it validates
+the key itself via `Authorization: Bearer` or a `?token=` query param
+(browsers can't set custom WebSocket headers).
 
 ---
 
