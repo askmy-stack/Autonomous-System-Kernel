@@ -94,3 +94,62 @@ def test_ops_restore_rejects_disallowed_target(client):
             headers={"Authorization": "Bearer test-secret"},
         )
         assert resp.status_code == 400
+
+
+class _FakeWebSocket:
+    def __init__(self, headers=None, query_params=None):
+        self.headers = headers or {}
+        self.query_params = query_params or {}
+
+
+def test_authorize_websocket_open_when_no_key_configured():
+    from backend.middleware import authorize_websocket
+
+    with patch("backend.middleware.settings") as mock_settings:
+        mock_settings.ask_api_key = ""
+        assert authorize_websocket(_FakeWebSocket()) is True
+
+
+def test_authorize_websocket_accepts_bearer_header():
+    from backend.middleware import authorize_websocket
+
+    with patch("backend.middleware.settings") as mock_settings:
+        mock_settings.ask_api_key = "test-secret"
+        ws = _FakeWebSocket(headers={"authorization": "Bearer test-secret"})
+        assert authorize_websocket(ws) is True
+
+
+def test_authorize_websocket_accepts_token_query_param():
+    from backend.middleware import authorize_websocket
+
+    with patch("backend.middleware.settings") as mock_settings:
+        mock_settings.ask_api_key = "test-secret"
+        ws = _FakeWebSocket(query_params={"token": "test-secret"})
+        assert authorize_websocket(ws) is True
+
+
+def test_authorize_websocket_rejects_missing_or_invalid_credentials():
+    from backend.middleware import authorize_websocket
+
+    with patch("backend.middleware.settings") as mock_settings:
+        mock_settings.ask_api_key = "test-secret"
+        assert authorize_websocket(_FakeWebSocket()) is False
+        assert authorize_websocket(_FakeWebSocket(query_params={"token": "wrong"})) is False
+        assert authorize_websocket(_FakeWebSocket(headers={"authorization": "Bearer wrong"})) is False
+
+
+def test_voice_stt_stream_rejects_connection_without_key(client):
+    with patch("backend.middleware.settings") as mock_settings:
+        mock_settings.ask_api_key = "test-secret"
+        with pytest.raises(Exception):  # noqa: B017 - Starlette raises WebSocketDisconnect on rejected handshake
+            with client.websocket_connect("/voice/stt/stream"):
+                pass
+
+
+def test_voice_stt_stream_accepts_connection_with_token_query_param(client):
+    with patch("backend.middleware.settings") as mock_settings:
+        mock_settings.ask_api_key = "test-secret"
+        with client.websocket_connect("/voice/stt/stream?token=test-secret") as ws:
+            ws.send_json({"browser_transcript": "hello", "final": True})
+            data = ws.receive_json()
+            assert data["text"] == "hello"
